@@ -1,0 +1,32 @@
+{
+  "name": "appco_back-end",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js",
+    "dev": "nodemon index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ValeriiaChorna/AppCo_Back-end.git"
+  },
+  "author": "Valeriia Chorna",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ValeriiaChorna/AppCo_Back-end/issues"
+  },
+  "homepage": "https://github.com/ValeriiaChorna/AppCo_Back-end#readme",
+  "devDependencies": {
+    "nodemon": "^2.0.6"
+  },
+  "dependencies": {
+    "dotenv": "^8.2.0",
+    "dotenv-expand": "^5.1.0",
+    "esm": "^3.2.25",
+    "express": "^4.17.1",
+    "morgan": "^1.10.0",
+    "sqlite3": "^5.0.0"
+  }
+}
