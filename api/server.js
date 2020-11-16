@@ -3,8 +3,9 @@ import express from "express";
 // import { authRouter } from "./auth/auth.router";
 import morgan from "morgan";
 import path from "path";
+import db from "./db-connection";
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 
 export class CrudServer {
   constructor() {
@@ -27,8 +28,6 @@ export class CrudServer {
   initMiddleware() {
     this.server.use(express.json());
     this.server.use(morgan("tiny"));
-    // this.server.use(cors());
-    // this.server.use(cookieParser());
   }
 
   initRoutes() {
@@ -46,14 +45,12 @@ export class CrudServer {
 
   async initDatabase() {
     try {
-      //   await mongoose.connect(process.env.MONGODB_DB_URI, {
-      //     useNewUrlParser: true,
-      //     useUnifiedTopology: true,
-      //     useFindAndModify: false,
-      //   });
+      db;
+
       console.log("Database SQLite connection successful");
     } catch (err) {
       console.log("SQLite connection error", err);
+      // console.log("Close the database connection.");
       process.exit(1);
     }
   }
