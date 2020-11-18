@@ -4,6 +4,8 @@ import express from "express";
 import morgan from "morgan";
 import path from "path";
 import db from "./db-connection";
+import userModel from "./users/user.model";
+import statisticModel from "./users/statistic.model";
 
 const PORT = process.env.PORT || 3001;
 
@@ -45,9 +47,17 @@ export class CrudServer {
 
   async initDatabase() {
     try {
-      db;
-
+      await db.authenticate();
       console.log("Database SQLite connection successful");
+
+      await userModel.initUser();
+      await statisticModel.initStatistic();
+      userModel.userClass.hasMany(statisticModel.statisticClass, {
+        foreignKey: "user_id",
+      });
+      await db.sync();
+
+      console.log("Tables connection successful");
     } catch (err) {
       console.log("SQLite connection error", err);
       // console.log("Close the database connection.");
