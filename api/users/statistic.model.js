@@ -7,17 +7,11 @@ async function initUserStatistic() {
   return new Promise((res) => {
     User_Statistic.init(
       {
-        stat_id: {
-          type: Sequelize.INTEGER,
-          allowNull: false,
-          autoIncrement: true,
-          primaryKey: true,
-        },
         user_id: {
           type: Sequelize.INTEGER,
           allowNull: false,
           references: {
-            model: "user",
+            model: "Users",
             key: "id",
           },
         },

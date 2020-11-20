@@ -6,6 +6,8 @@ import path from "path";
 import db from "./db-connection";
 import userModel from "./users/user.model";
 import statisticModel from "./users/statistic.model";
+import users_json from "../db/users.json";
+import usersStat_json from "../db/users_statistic.json";
 
 const PORT = process.env.PORT || 3001;
 
@@ -58,6 +60,18 @@ export class CrudServer {
       await db.sync();
 
       console.log("Tables connection successful");
+
+      const userData = await userModel.userClass.findAll();
+      if (userData.length === 0) {
+        await insertJsonData(userModel.userClass, users_json);
+        await console.log("Inserted users from users.json");
+      }
+
+      const statisticData = await statisticModel.statisticClass.findAll();
+      if (statisticData.length === 0) {
+        await insertJsonData(statisticModel.statisticClass, usersStat_json);
+        await console.log("Inserted statistic from users_statistic.json");
+      }
     } catch (err) {
       console.log("SQLite connection error", err);
       // console.log("Close the database connection.");
@@ -70,4 +84,8 @@ export class CrudServer {
       console.log("Server started listening on port", PORT);
     });
   }
+}
+
+function insertJsonData(Model, dataJson) {
+  return dataJson.map((el) => Model.create(el));
 }
