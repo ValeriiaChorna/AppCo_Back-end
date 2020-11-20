@@ -15,7 +15,11 @@ async function initUserStatistic() {
             key: "id",
           },
         },
-        date: { type: Sequelize.STRING, allowNull: false },
+        date: {
+          type: Sequelize.STRING,
+          allowNull: false,
+          validate: { isDate: true },
+        },
         page_views: { type: Sequelize.INTEGER, allowNull: false },
         clicks: { type: Sequelize.INTEGER, allowNull: false },
       },

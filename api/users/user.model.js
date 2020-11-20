@@ -15,7 +15,12 @@ async function initUser() {
         },
         first_name: { type: Sequelize.STRING, allowNull: false },
         last_name: { type: Sequelize.STRING, allowNull: false },
-        email: { type: Sequelize.STRING, allowNull: false, unique: true },
+        email: {
+          type: Sequelize.STRING,
+          allowNull: false,
+          unique: true,
+          validate: { isEmail: true },
+        },
         gender: { type: Sequelize.STRING, allowNull: false },
         ip_address: { type: Sequelize.STRING, allowNull: false },
       },
