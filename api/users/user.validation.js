@@ -1,62 +1,48 @@
 import Joi from "joi";
 import { ValidationError } from "../helpers/errorConstructors";
 
-class ContactValidations {
-  validateCreateContact(req, res, next) {
-    const contactRules = Joi.object({
-      name: Joi.string().required(),
-      email: Joi.string().required(),
-      phone: Joi.string().required(),
-      password: Joi.string().required(),
+class UserValidations {
+  validatePagination(req, res, next) {
+    const paginRules = Joi.object({
+      page: Joi.number().integer().min(0),
+      limit: Joi.number().integer().min(0),
     });
-    const validationResult = Joi.validate(req.body, contactRules);
+    const { page: q_page, limit: q_limit } = req.query;
+
+    const validationResult = paginRules.validate({
+      page: q_page,
+      limit: q_limit,
+    });
     if (validationResult.error) {
-      throw new ValidationError("missing required name field");
+      throw new ValidationError(
+        "page and limit must an integer greater than 0"
+      );
     }
     next();
   }
 
-  validateUpdateContact(req, res, next) {
-    const contactRules = Joi.object({
-      name: Joi.string(),
-      email: Joi.string(),
-      phone: Joi.string(),
-      subscription: Joi.string().valid(["free", "pro", "premium"]),
+  validateGetReq(req, res, next) {
+    const paginRules = Joi.object({
+      dateFrom: Joi.date(),
+      dateTo: Joi.date(),
     });
-    const { name, email, phone } = req.body;
-    if (!(name || email || phone)) {
-      throw new ValidationError("missing fields");
-    }
-    const validationResult = Joi.validate(req.body, contactRules);
-    if (validationResult.error) {
-      throw new ValidationError("missing required name field");
-    }
-    next();
-  }
+    const { dateFrom: q_dateFrom, dateTo: q_dateTo } = req.query;
 
-  validateUpdateAllContactFields(req, res, next) {
-    const contactRules = Joi.object({
-      name: Joi.string(),
-      email: Joi.string(),
-      phone: Joi.string(),
-      subscription: Joi.string().valid(["free", "pro", "premium"]),
+    const validationResult = paginRules.validate({
+      dateFrom: q_dateFrom,
+      dateTo: q_dateTo,
     });
-    const { name, email, phone } = req.body;
-    const hasAvatarFile = req.file && req.file.fieldname === "avatar";
-    if (!(name || email || phone || hasAvatarFile)) {
-      throw new ValidationError("missing fields");
+
+    if (new Date(q_dateFrom) > new Date(q_dateTo)) {
+      throw new ValidationError("dateFrom can't be greater than dateTo");
     }
-
-    // if (!hasAvatarFile) {
-    //   return res.status(400).json({ message: "Avatar file was not provided" });
-    // }
-
-    const validationResult = Joi.validate(req.body, contactRules);
     if (validationResult.error) {
-      throw new ValidationError("missing required name field");
+      throw new ValidationError(
+        'dateFrom and dateTo must a date. Ex. "YYYY-MM-DD"'
+      );
     }
     next();
   }
 }
 
-export const contactValidations = new ContactValidations();
+export const userValidations = new UserValidations();

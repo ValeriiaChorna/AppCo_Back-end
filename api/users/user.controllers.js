@@ -7,10 +7,12 @@ import { createControllerProxy } from "../helpers/controllerProxy";
 class UserController {
   async getUserStatistic(req, res, next) {
     try {
-      const { page, limit } = req.query;
+      const { page: q_page, limit: q_limit } = req.query;
+      const page = q_page || 0;
+      const limit = q_limit || 50;
       const usersStatisticList = await statisticModel.statisticClass.findAll({
-        offset: page * limit || 0,
-        limit: limit || 50,
+        offset: page * limit,
+        limit: limit,
         group: ["user_id"],
         attributes: [
           "user_id",
@@ -31,7 +33,7 @@ class UserController {
           ],
         },
       });
-      return res.status(200).json({ usersStatisticList });
+      return res.status(200).json({ page, limit, usersStatisticList });
     } catch (err) {
       next(err);
     }
@@ -39,7 +41,8 @@ class UserController {
 
   async getUserStatisticById(req, res, next) {
     try {
-      const { userId, dateFrom, dateTo } = req.params;
+      const { userId } = req.params;
+      const { dateFrom, dateTo } = req.query;
       const foundedUserStatistic = await statisticModel.statisticClass.findAll({
         where: { user_id: userId },
         attributes: ["date", "page_views", "clicks"],

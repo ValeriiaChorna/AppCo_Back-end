@@ -1,11 +1,19 @@
 import { Router } from "express";
 import { usersController } from "./user.controllers";
-// import { contactValidations } from "./contact.validation";
+import { userValidations } from "./user.validation";
 
 const router = Router();
 
-router.get("/statistic", usersController.getUserStatistic);
+router.get(
+  "/statistic",
+  userValidations.validatePagination,
+  usersController.getUserStatistic
+);
 
-router.get("/statistic/:userId", usersController.getUserStatisticById);
+router.get(
+  "/statistic/:userId",
+  userValidations.validateGetReq,
+  usersController.getUserStatisticById
+);
 
 export const usersRouter = router;
