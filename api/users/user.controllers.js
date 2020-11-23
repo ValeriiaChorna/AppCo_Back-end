@@ -1,155 +1,73 @@
-// import { contactModel } from "./contacts.model";
-import { NotFound, DeletedContactSuccess } from "../helpers/errorConstructors";
+import userModel from "./user.model";
+import statisticModel from "./statistic.model";
+import db from "../db-connection";
+// import { NotFound } from "../helpers/errorConstructors";
 import { createControllerProxy } from "../helpers/controllerProxy";
-// import { authActions } from "../auth/auth.actions";
-// import fs from "fs";
-// import path from "path";
 
-class ContactsController {
-  async getListContacts(req, res, next) {
+class UserController {
+  async getUserStatistic(req, res, next) {
     try {
-      const { page, limit, sort, sub } = req.query;
-      if (!sub) {
-        const contacts = await this.getContactsWithPagination(
-          page,
-          limit,
-          sort
-        );
-        return res.status(200).json(contacts.docs);
-      }
-      const filteredContactsList = await this.filterContactBySub(sub);
-      return res.status(200).json(filteredContactsList.docs);
-    } catch (err) {
-      next(err);
-    }
-  }
-  async getContactsWithPagination(page, limit, sort) {
-    const options = limit && { page, limit, sort };
-    return contactModel.paginate({}, options);
-  }
+      const { page, limit } = req.query;
+      const usersStatisticList = await statisticModel.statisticClass.findAll({
+        offset: page * limit || 0,
+        limit: limit || 50,
+        group: ["user_id"],
+        attributes: [
+          "user_id",
+          [db.fn("sum", db.col("page_views")), "Total_page_views"],
+          [db.fn("sum", db.col("clicks")), "Total_clicks"],
+        ],
 
-  async filterContactBySub(sub) {
-    return contactModel.paginate({ subscription: sub });
-  }
-
-  async getContactById(req, res, next) {
-    try {
-      const { contactId } = req.params;
-      const foundedContact = await this.getContactByIdOrThrow(contactId);
-      const { email, subscription } = foundedContact;
-      return res.status(200).json({ email, subscription });
-    } catch (err) {
-      next(err);
-    }
-  }
-
-  async getCurrentContact(req, res, next) {
-    try {
-      const { _id: contactId } = req.contact;
-      const foundedContact = await this.getContactByIdOrThrow(contactId);
-      const { email, subscription } = foundedContact;
-      return res.status(200).json({ email, subscription });
-    } catch (err) {
-      next(err);
-    }
-  }
-
-  async createContact(req, res, next) {
-    try {
-      const passwordHash = await authActions.hashPassword(req.body.password);
-      const newContact = await contactModel.createNewContact({
-        ...req.body,
-        passwordHash,
+        include: {
+          model: userModel.userClass,
+          as: "user_inf",
+          attributes: [
+            "id",
+            "first_name",
+            "last_name",
+            "email",
+            "gender",
+            "ip_address",
+          ],
+        },
       });
-      return res.status(201).json(newContact);
+      return res.status(200).json({ usersStatisticList });
     } catch (err) {
       next(err);
     }
   }
 
-  async deleteContact(req, res, next) {
+  async getUserStatisticById(req, res, next) {
     try {
-      const contactId = req.params.contactId;
-      await this.getContactByIdOrThrow(contactId);
-      await contactModel.removeContact(contactId);
-      throw new DeletedContactSuccess("contact deleted");
-    } catch (err) {
-      next(err);
-    }
-  }
-
-  async updateContact(req, res, next) {
-    try {
-      const { contactId } = req.params;
-      await this.getContactByIdOrThrow(contactId);
-      const updatedContact = await contactModel.updateExistedContact(
-        contactId,
-        req.body
+      const { userId, dateFrom, dateTo } = req.params;
+      const foundedUserStatistic = await statisticModel.statisticClass.findAll({
+        where: { user_id: userId },
+        attributes: ["date", "page_views", "clicks"],
+      });
+      const filteredByDate = await this.filterByDate(
+        foundedUserStatistic,
+        dateFrom,
+        dateTo
       );
-      const { name, email, subscription } = updatedContact;
-      return res.status(200).json({ name, email, subscription });
+      return res.status(200).json({ userId, user_statistic: filteredByDate });
     } catch (err) {
       next(err);
     }
   }
 
-  async updateAllContactFields(req, res, next) {
-    try {
-      const { _id: contactId, avatarURL: oldAvatarUrl } = req.contact;
-
-      if (!(req.file && req.file.fieldname === "avatar")) {
-        const updatedContact = await contactModel.updateExistedContact(
-          contactId,
-          req.body
-        );
-        const { name, email, subscription } = updatedContact;
-        return res.status(200).json({ name, email, subscription });
-      }
-
-      const newAvatarURL = `${process.env.SERVER_URL}/${process.env.COMPRESSED_IMAGES_BASE_URL}/${req.file.filename}`;
-      await this.findAndDeleteOldAvatar(oldAvatarUrl);
-
-      // await this.getContactByIdOrThrow(contactId);
-      console.log("req.body:", req.body);
-      const newContactData = { ...req.body, avatarURL: newAvatarURL };
-      const updatedContact = await contactModel.updateExistedContact(
-        contactId,
-        newContactData
-      );
-      const { name, email, subscription, avatarURL } = updatedContact;
-      return res.status(200).json({ avatarURL, name, email, subscription });
-    } catch (err) {
-      next(err);
-    }
-  }
-
-  //   async findAndDeleteOldAvatar(oldAvatarUrl) {
-  //     const OldAvatar = oldAvatarUrl.replace(
-  //       `${process.env.SERVER_URL}/${process.env.COMPRESSED_IMAGES_BASE_URL}/`,
-  //       ""
-  //     );
-  //     const pathOldAvatar = path.join(
-  //       __dirname,
-  //       "../../static/public/images/",
-  //       `${OldAvatar}`
-  //     );
-  //     await fs.unlink(pathOldAvatar, (err) => {
-  //       if (err) {
-  //         console.error(err);
-  //         return;
-  //       }
-  //     });
-  //   }
-
-  async getContactByIdOrThrow(contactId) {
-    const foundedContact = await contactModel.getContactById(contactId);
-    if (!foundedContact) {
-      throw new NotFound("Contact not found");
-    }
-    return foundedContact;
+  filterByDate(data, dateFrom, dateTo) {
+    const dataDates = data
+      .map(({ date }) => new Date(date))
+      .sort((a, b) => a - b);
+    const minDate = dataDates[0];
+    const maxDate = dataDates[dataDates.length - 1];
+    const FROM = (dateFrom && new Date(dateFrom)) || minDate;
+    const TO = (dateTo && new Date(dateTo)) || maxDate;
+    const statistic_data = data.filter(
+      ({ date }) => new Date(date) >= FROM && new Date(date) <= TO
+    );
+    return { statistic_data, minDate, maxDate };
   }
 }
 
-export const contactsController = createControllerProxy(
-  new ContactsController()
-);
+export const usersController = createControllerProxy(new UserController());

@@ -1,11 +1,10 @@
 import express from "express";
-// import { contactsRouter } from "./contacts/contacts.router";
-// import { authRouter } from "./auth/auth.router";
 import morgan from "morgan";
 import path from "path";
 import db from "./db-connection";
 import userModel from "./users/user.model";
 import statisticModel from "./users/statistic.model";
+import { usersRouter } from "./users/user.router";
 import users_json from "../db/users.json";
 import usersStat_json from "../db/users_statistic.json";
 
@@ -36,8 +35,7 @@ export class CrudServer {
 
   initRoutes() {
     this.server.use(express.static(path.join(__dirname, "../static")));
-    // this.server.use("/contacts", contactsRouter);
-    // this.server.use("/auth", authRouter);
+    this.server.use("/users", usersRouter);
   }
 
   handleErrors() {
@@ -54,6 +52,10 @@ export class CrudServer {
 
       await userModel.initUser();
       await statisticModel.initStatistic();
+      statisticModel.statisticClass.belongsTo(userModel.userClass, {
+        foreignKey: "user_id",
+        as: "user_inf",
+      });
       userModel.userClass.hasMany(statisticModel.statisticClass, {
         foreignKey: "user_id",
       });
