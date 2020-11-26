@@ -2,12 +2,17 @@ import userModel from "./user.model";
 import statisticModel from "./statistic.model";
 import db from "../db-connection";
 // import { NotFound } from "../helpers/errorConstructors";
-import { createControllerProxy } from "../helpers/controllerProxy";
+import {
+  createControllerProxy
+} from "../helpers/controllerProxy";
 
 class UserController {
   async getUserStatistic(req, res, next) {
     try {
-      const { page: q_page, limit: q_limit } = req.query;
+      const {
+        page: q_page,
+        limit: q_limit
+      } = req.query;
       const page = q_page || 0;
       const limit = q_limit || 50;
       const usersStatisticList = await statisticModel.statisticClass.findAll({
@@ -33,7 +38,13 @@ class UserController {
           ],
         },
       });
-      return res.status(200).json({ page, limit, usersStatisticList });
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Access-Control-Allow-Headers', 'origin, content-type, accept');
+      return res.status(200).json({
+        page,
+        limit,
+        usersStatisticList
+      });
     } catch (err) {
       next(err);
     }
@@ -41,10 +52,17 @@ class UserController {
 
   async getUserStatisticById(req, res, next) {
     try {
-      const { userId } = req.params;
-      const { dateFrom, dateTo } = req.query;
+      const {
+        userId
+      } = req.params;
+      const {
+        dateFrom,
+        dateTo
+      } = req.query;
       const foundedUserStatistic = await statisticModel.statisticClass.findAll({
-        where: { user_id: userId },
+        where: {
+          user_id: userId
+        },
         attributes: ["date", "page_views", "clicks"],
       });
       const filteredByDate = await this.filterByDate(
@@ -52,7 +70,12 @@ class UserController {
         dateFrom,
         dateTo
       );
-      return res.status(200).json({ userId, user_statistic: filteredByDate });
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Access-Control-Allow-Headers', 'origin, content-type, accept');
+      return res.status(200).json({
+        userId,
+        user_statistic: filteredByDate
+      });
     } catch (err) {
       next(err);
     }
@@ -60,16 +83,24 @@ class UserController {
 
   filterByDate(data, dateFrom, dateTo) {
     const dataDates = data
-      .map(({ date }) => new Date(date))
+      .map(({
+        date
+      }) => new Date(date))
       .sort((a, b) => a - b);
     const minDate = dataDates[0];
     const maxDate = dataDates[dataDates.length - 1];
     const FROM = (dateFrom && new Date(dateFrom)) || minDate;
     const TO = (dateTo && new Date(dateTo)) || maxDate;
     const statistic_data = data.filter(
-      ({ date }) => new Date(date) >= FROM && new Date(date) <= TO
+      ({
+        date
+      }) => new Date(date) >= FROM && new Date(date) <= TO
     );
-    return { statistic_data, minDate, maxDate };
+    return {
+      statistic_data,
+      minDate,
+      maxDate
+    };
   }
 }
 
