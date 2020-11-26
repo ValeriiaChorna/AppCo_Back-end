@@ -8,7 +8,7 @@ import { usersRouter } from "./users/user.router";
 import users_json from "../db/users.json";
 import usersStat_json from "../db/users_statistic.json";
 
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 4001;
 
 export class CrudServer {
   constructor() {
