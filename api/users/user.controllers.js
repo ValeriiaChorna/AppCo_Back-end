@@ -15,6 +15,13 @@ class UserController {
       } = req.query;
       const page = q_page || 0;
       const limit = q_limit || 50;
+      const maxId = await userModel.userClass.findAll({
+        attributes: [
+          [db.fn('max', db.col('id')), 'maxId']
+        ],
+      });
+      const tableLength = maxId[0].dataValues.maxId;
+      const totalPages = Math.ceil(tableLength / limit) - 1;
       const usersStatisticList = await statisticModel.statisticClass.findAll({
         offset: page * limit,
         limit: limit,
@@ -42,6 +49,7 @@ class UserController {
       res.setHeader('Access-Control-Allow-Headers', 'origin, content-type, accept');
       return res.status(200).json({
         page,
+        totalPages,
         limit,
         usersStatisticList
       });
