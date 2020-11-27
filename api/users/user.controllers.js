@@ -67,6 +67,20 @@ class UserController {
         dateFrom,
         dateTo
       } = req.query;
+      const user_inf = await userModel.userClass.findOne({
+        where: {
+          id: userId
+        },
+        attributes: [
+          "id",
+          "first_name",
+          "last_name",
+          "email",
+          "gender",
+          "ip_address",
+
+        ],
+      });
       const foundedUserStatistic = await statisticModel.statisticClass.findAll({
         where: {
           user_id: userId
@@ -81,7 +95,7 @@ class UserController {
       res.setHeader('Access-Control-Allow-Origin', '*');
       res.setHeader('Access-Control-Allow-Headers', 'origin, content-type, accept');
       return res.status(200).json({
-        userId,
+        user_inf,
         user_statistic: filteredByDate
       });
     } catch (err) {
